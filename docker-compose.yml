@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  # ============ DATABASES ============
+  postgres:
+    image: postgres:16-alpine
+    container_name: veeparts-postgres
+    environment:
+      POSTGRES_USER: veeparts
+      POSTGRES_PASSWORD: veeparts_secret
+      POSTGRES_DB: veeparts
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veeparts"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    container_name: veeparts-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: veeparts_catalog
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: veeparts-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: veeparts-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: curl -s http://localhost:9200/_cluster/health | grep -q '"status":"green\|yellow"'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ============ BACKEND API ============
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: veeparts-backend
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=veeparts
+      - DB_PASSWORD=veeparts_secret
+      - DB_DATABASE=veeparts
+      - MONGODB_URI=mongodb://mongodb:27017/veeparts_catalog
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+      - JWT_SECRET=veeparts-jwt-secret-change-in-production
+      - JWT_REFRESH_SECRET=veeparts-refresh-secret-change-in-production
+      - AI_SERVICE_URL=http://ai-service:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # ============ AI SERVICE ============
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: veeparts-ai
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/veeparts_catalog
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./ai-service:/app
+
+  # ============ DASHBOARD ============
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: veeparts-dashboard
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+      - NEXT_PUBLIC_WS_URL=ws://localhost:3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres_data:
+  mongo_data:
+  redis_data:
+  es_data:

@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "VeeParts",
+    "slug": "veeparts",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.veeparts.app",
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "com.veeparts.app",
+      "permissions": ["ACCESS_FINE_LOCATION"]
+    },
+    "plugins": [
+      "expo-font",
+      "expo-location",
+      "expo-notifications",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiUrl": "http://localhost:3000/api/v1"
+    },
+    "locales": {
+      "ar": "./src/i18n/ar.json",
+      "en": "./src/i18n/en.json"
+    }
+  }
+}
