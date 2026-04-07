@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
 import {
+  PhotoIcon,
   PlusIcon,
   TrashIcon,
   CheckCircleIcon,
@@ -10,7 +11,7 @@ import {
 
 interface WorkingHour {
   day: string;
-  dayLabel: string;
+  dayKey: string;
   open: string;
   close: string;
   isClosed: boolean;
@@ -23,41 +24,39 @@ interface DeliveryZone {
 }
 
 const initialWorkingHours: WorkingHour[] = [
-  { day: "saturday", dayLabel: "السبت", open: "09:00", close: "22:00", isClosed: false },
-  { day: "sunday", dayLabel: "الأحد", open: "09:00", close: "22:00", isClosed: false },
-  { day: "monday", dayLabel: "الاثنين", open: "09:00", close: "22:00", isClosed: false },
-  { day: "tuesday", dayLabel: "الثلاثاء", open: "09:00", close: "22:00", isClosed: false },
-  { day: "wednesday", dayLabel: "الأربعاء", open: "09:00", close: "22:00", isClosed: false },
-  { day: "thursday", dayLabel: "الخميس", open: "10:00", close: "20:00", isClosed: false },
-  { day: "friday", dayLabel: "الجمعة", open: "", close: "", isClosed: true },
+  { day: "السبت", dayKey: "saturday", open: "09:00", close: "21:00", isClosed: false },
+  { day: "الأحد", dayKey: "sunday", open: "09:00", close: "21:00", isClosed: false },
+  { day: "الاثنين", dayKey: "monday", open: "09:00", close: "21:00", isClosed: false },
+  { day: "الثلاثاء", dayKey: "tuesday", open: "09:00", close: "21:00", isClosed: false },
+  { day: "الأربعاء", dayKey: "wednesday", open: "09:00", close: "21:00", isClosed: false },
+  { day: "الخميس", dayKey: "thursday", open: "09:00", close: "22:00", isClosed: false },
+  { day: "الجمعة", dayKey: "friday", open: "14:00", close: "22:00", isClosed: false },
 ];
 
-const initialDeliveryZones: DeliveryZone[] = [
+const initialZones: DeliveryZone[] = [
   { zone: "القاهرة - وسط البلد", fee: 30, time: "1-2 ساعة" },
-  { zone: "القاهرة - مدينة نصر", fee: 35, time: "1-3 ساعة" },
-  { zone: "الجيزة - الدقي", fee: 40, time: "2-3 ساعة" },
-  { zone: "الجيزة - 6 أكتوبر", fee: 50, time: "3-4 ساعة" },
+  { zone: "القاهرة - مدينة نصر", fee: 35, time: "1-2 ساعة" },
+  { zone: "الجيزة", fee: 45, time: "2-3 ساعات" },
+  { zone: "6 أكتوبر", fee: 50, time: "2-4 ساعات" },
 ];
 
 export default function ProfilePage() {
   const { t } = useTranslation();
-  const [saved, setSaved] = useState(false);
-
-  const [nameAr, setNameAr] = useState("متجر فيبارتس");
-  const [nameEn, setNameEn] = useState("VeeParts Store");
+  const [storeNameAr, setStoreNameAr] = useState("قطع غيار فيبارتس");
+  const [storeNameEn, setStoreNameEn] = useState("VeeParts Auto Store");
   const [description, setDescription] = useState(
-    "متجر متخصص في قطع غيار السيارات الأصلية والمستعملة. نوفر جميع أنواع القطع لمختلف ماركات السيارات بأفضل الأسعار مع ضمان الجودة."
+    "متجر متخصص في قطع غيار السيارات الأصلية والمستعملة. نوفر أفضل القطع بأسعار تنافسية مع خدمة توصيل سريعة لجميع أنحاء القاهرة والجيزة."
   );
-  const [phone, setPhone] = useState("+20 100 123 4567");
-  const [email, setEmail] = useState("info@veeparts.com");
-  const [address, setAddress] = useState("القاهرة، مدينة نصر، شارع عباس العقاد");
-
+  const [phone, setPhone] = useState("01012345678");
+  const [email, setEmail] = useState("store@veeparts.com");
+  const [address, setAddress] = useState("15 شارع السيارات، مدينة نصر، القاهرة");
   const [workingHours, setWorkingHours] = useState<WorkingHour[]>(initialWorkingHours);
-  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(initialDeliveryZones);
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>(initialZones);
+  const [saved, setSaved] = useState(false);
 
   const updateWorkingHour = (index: number, field: keyof WorkingHour, value: string | boolean) => {
     setWorkingHours((prev) =>
-      prev.map((wh, i) => (i === index ? { ...wh, [field]: value } : wh))
+      prev.map((h, i) => (i === index ? { ...h, [field]: value } : h))
     );
   };
 
@@ -65,18 +64,17 @@ export default function ProfilePage() {
     setDeliveryZones((prev) => [...prev, { zone: "", fee: 0, time: "" }]);
   };
 
+  const updateDeliveryZone = (index: number, field: keyof DeliveryZone, value: string | number) => {
+    setDeliveryZones((prev) =>
+      prev.map((z, i) => (i === index ? { ...z, [field]: value } : z))
+    );
+  };
+
   const removeDeliveryZone = (index: number) => {
     setDeliveryZones((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateDeliveryZone = (index: number, field: keyof DeliveryZone, value: string | number) => {
-    setDeliveryZones((prev) =>
-      prev.map((dz, i) => (i === index ? { ...dz, [field]: value } : dz))
-    );
-  };
-
   const handleSave = () => {
-    console.log("Profile data:", { nameAr, nameEn, description, phone, email, address, workingHours, deliveryZones });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -87,14 +85,50 @@ export default function ProfilePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">{t("profile.title")}</h1>
-          <p className="text-gray-500 text-sm mt-1">إدارة بيانات المتجر</p>
+          <p className="text-gray-500 text-sm mt-1">تعديل بيانات المتجر</p>
         </div>
-        {saved && (
-          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg">
-            <CheckCircleIcon className="w-5 h-5" />
-            <span className="text-sm font-medium">تم الحفظ بنجاح</span>
+        <button onClick={handleSave} className="btn-primary flex items-center gap-2">
+          {saved ? (
+            <>
+              <CheckCircleIcon className="w-5 h-5" />
+              تم الحفظ
+            </>
+          ) : (
+            t("profile.saveChanges")
+          )}
+        </button>
+      </div>
+
+      {/* Logo & Cover */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-lg font-bold text-primary mb-4">الصور</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Logo Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("profile.logo")}
+            </label>
+            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-accent transition-colors bg-gray-50">
+              <PhotoIcon className="w-12 h-12 text-gray-300 mb-2" />
+              <span className="text-sm text-gray-500">{t("profile.uploadLogo")}</span>
+              <span className="text-xs text-gray-400 mt-1">PNG, JPG (200x200 px)</span>
+              <input type="file" accept="image/*" className="hidden" />
+            </label>
           </div>
-        )}
+
+          {/* Cover Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t("profile.coverImage")}
+            </label>
+            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-accent transition-colors bg-gray-50">
+              <PhotoIcon className="w-12 h-12 text-gray-300 mb-2" />
+              <span className="text-sm text-gray-500">{t("profile.uploadCover")}</span>
+              <span className="text-xs text-gray-400 mt-1">PNG, JPG (1200x400 px)</span>
+              <input type="file" accept="image/*" className="hidden" />
+            </label>
+          </div>
+        </div>
       </div>
 
       {/* Store Info */}
@@ -108,9 +142,10 @@ export default function ProfilePage() {
               </label>
               <input
                 type="text"
-                value={nameAr}
-                onChange={(e) => setNameAr(e.target.value)}
+                value={storeNameAr}
+                onChange={(e) => setStoreNameAr(e.target.value)}
                 className="input-field"
+                dir="rtl"
               />
             </div>
             <div>
@@ -119,8 +154,8 @@ export default function ProfilePage() {
               </label>
               <input
                 type="text"
-                value={nameEn}
-                onChange={(e) => setNameEn(e.target.value)}
+                value={storeNameEn}
+                onChange={(e) => setStoreNameEn(e.target.value)}
                 className="input-field"
                 dir="ltr"
               />
@@ -143,32 +178,30 @@ export default function ProfilePage() {
       {/* Contact Info */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-primary mb-4">{t("profile.contactInfo")}</h2>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("profile.phone")}
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="input-field"
-                dir="ltr"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("profile.email")}
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                dir="ltr"
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t("profile.phone")}
+            </label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="input-field"
+              dir="ltr"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t("profile.email")}
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-field"
+              dir="ltr"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -188,39 +221,43 @@ export default function ProfilePage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-primary mb-4">{t("profile.workingHours")}</h2>
         <div className="space-y-3">
-          {workingHours.map((wh, i) => (
-            <div key={wh.day} className="flex flex-wrap items-center gap-4 py-3 border-b border-gray-50 last:border-0">
-              <span className="w-24 text-sm font-medium text-gray-700">{wh.dayLabel}</span>
+          {workingHours.map((hour, index) => (
+            <div
+              key={hour.dayKey}
+              className={`flex flex-wrap items-center gap-4 p-3 rounded-lg border transition-colors ${
+                hour.isClosed ? "bg-gray-50 border-gray-200" : "bg-white border-gray-100"
+              }`}
+            >
+              <span className="text-sm font-medium text-gray-700 w-24">
+                {hour.day}
+              </span>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={wh.isClosed}
-                  onChange={(e) => updateWorkingHour(i, "isClosed", e.target.checked)}
-                  className="w-4 h-4 text-accent rounded border-gray-300 focus:ring-accent"
+                  checked={hour.isClosed}
+                  onChange={(e) => updateWorkingHour(index, "isClosed", e.target.checked)}
+                  className="w-4 h-4 text-accent rounded focus:ring-accent"
                 />
                 <span className="text-sm text-gray-500">{t("profile.closed")}</span>
               </label>
-              {!wh.isClosed && (
-                <div className="flex items-center gap-2">
+              {!hour.isClosed && (
+                <div className="flex items-center gap-2 flex-1 flex-wrap">
                   <label className="text-xs text-gray-400">{t("profile.openTime")}</label>
                   <input
                     type="time"
-                    value={wh.open}
-                    onChange={(e) => updateWorkingHour(i, "open", e.target.value)}
-                    className="input-field w-auto text-sm"
+                    value={hour.open}
+                    onChange={(e) => updateWorkingHour(index, "open", e.target.value)}
+                    className="input-field w-32"
                   />
                   <span className="text-gray-300">-</span>
                   <label className="text-xs text-gray-400">{t("profile.closeTime")}</label>
                   <input
                     type="time"
-                    value={wh.close}
-                    onChange={(e) => updateWorkingHour(i, "close", e.target.value)}
-                    className="input-field w-auto text-sm"
+                    value={hour.close}
+                    onChange={(e) => updateWorkingHour(index, "close", e.target.value)}
+                    className="input-field w-32"
                   />
                 </div>
-              )}
-              {wh.isClosed && (
-                <span className="text-sm text-red-400">{t("profile.closed")}</span>
               )}
             </div>
           ))}
@@ -231,64 +268,83 @@ export default function ProfilePage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-primary">{t("profile.deliveryZones")}</h2>
-          <button onClick={addDeliveryZone} className="btn-secondary flex items-center gap-1 text-sm py-1.5 px-3">
+          <button
+            onClick={addDeliveryZone}
+            className="btn-secondary text-sm flex items-center gap-1"
+          >
             <PlusIcon className="w-4 h-4" />
             {t("profile.addZone")}
           </button>
         </div>
         <div className="space-y-3">
-          {deliveryZones.map((dz, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-3 py-3 border-b border-gray-50 last:border-0">
-              <div className="flex-1 min-w-[180px]">
-                <label className="block text-xs text-gray-400 mb-1">{t("profile.zone")}</label>
+          {deliveryZones.map((zone, index) => (
+            <div
+              key={index}
+              className="flex flex-wrap items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-100"
+            >
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs text-gray-400 mb-1">
+                  {t("profile.zone")}
+                </label>
                 <input
                   type="text"
-                  value={dz.zone}
-                  onChange={(e) => updateDeliveryZone(i, "zone", e.target.value)}
-                  className="input-field text-sm"
+                  value={zone.zone}
+                  onChange={(e) => updateDeliveryZone(index, "zone", e.target.value)}
+                  className="input-field"
                   placeholder="اسم المنطقة"
                 />
               </div>
-              <div className="w-28">
-                <label className="block text-xs text-gray-400 mb-1">{t("profile.deliveryFee")} ({t("egp")})</label>
+              <div className="w-32">
+                <label className="block text-xs text-gray-400 mb-1">
+                  {t("profile.deliveryFee")} ({t("egp")})
+                </label>
                 <input
                   type="number"
-                  value={dz.fee}
-                  onChange={(e) => updateDeliveryZone(i, "fee", Number(e.target.value))}
-                  className="input-field text-sm"
+                  value={zone.fee}
+                  onChange={(e) => updateDeliveryZone(index, "fee", Number(e.target.value))}
+                  className="input-field"
                   min="0"
                 />
               </div>
-              <div className="w-32">
-                <label className="block text-xs text-gray-400 mb-1">{t("profile.deliveryTime")}</label>
+              <div className="w-40">
+                <label className="block text-xs text-gray-400 mb-1">
+                  {t("profile.deliveryTime")}
+                </label>
                 <input
                   type="text"
-                  value={dz.time}
-                  onChange={(e) => updateDeliveryZone(i, "time", e.target.value)}
-                  className="input-field text-sm"
+                  value={zone.time}
+                  onChange={(e) => updateDeliveryZone(index, "time", e.target.value)}
+                  className="input-field"
                   placeholder="مثال: 1-2 ساعة"
                 />
               </div>
-              <div className="pt-5">
-                <button
-                  onClick={() => removeDeliveryZone(i)}
-                  className="p-1.5 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => removeDeliveryZone(index)}
+                className="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors mt-5"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
             </div>
           ))}
           {deliveryZones.length === 0 && (
-            <p className="text-center py-6 text-gray-400 text-sm">لا توجد مناطق توصيل. أضف منطقة جديدة.</p>
+            <div className="text-center py-8 text-gray-400 text-sm">
+              لا توجد مناطق توصيل. أضف منطقة جديدة.
+            </div>
           )}
         </div>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <button onClick={handleSave} className="btn-primary text-lg px-10 py-3">
-          {t("profile.saveChanges")}
+      {/* Bottom Save Button */}
+      <div className="flex justify-end pb-8">
+        <button onClick={handleSave} className="btn-primary flex items-center gap-2">
+          {saved ? (
+            <>
+              <CheckCircleIcon className="w-5 h-5" />
+              تم الحفظ بنجاح
+            </>
+          ) : (
+            t("profile.saveChanges")
+          )}
         </button>
       </div>
     </div>

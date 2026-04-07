@@ -12,6 +12,9 @@ import {
   TrashIcon,
   ExclamationTriangleIcon,
   SparklesIcon,
+  CubeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
 interface MockProduct {
@@ -61,6 +64,8 @@ export default function InventoryPage() {
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCsvUploader, setShowCsvUploader] = useState(false);
   const [editProduct, setEditProduct] = useState<MockProduct | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const lowStockCount = mockProducts.filter((p) => p.stock < p.minStockAlert).length;
 
@@ -179,7 +184,7 @@ export default function InventoryPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((product) => (
+            {filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((product) => (
               <tr key={product.id}>
                 <td className="font-medium text-primary">{product.nameAr}</td>
                 <td className="text-gray-500 font-mono text-xs">{product.oem}</td>
@@ -217,6 +222,44 @@ export default function InventoryPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {filteredProducts.length > itemsPerPage && (
+        <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <span className="text-sm text-gray-500">
+            {t("showing")} {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredProducts.length)} {t("of")} {filteredProducts.length} {t("results")}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
+            {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === i + 1
+                    ? "bg-accent text-white"
+                    : "hover:bg-gray-100 text-gray-600"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(Math.ceil(filteredProducts.length / itemsPerPage), p + 1))}
+              disabled={currentPage >= Math.ceil(filteredProducts.length / itemsPerPage)}
+              className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-12 text-gray-400">
